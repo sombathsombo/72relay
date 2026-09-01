@@ -1,0 +1,42 @@
+name: publish
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: fetch and digest
+        run: |
+          python3 - <<'PY' > poker.json
+          import json, urllib.request
+          url = ("https://72poker.pokerasiamanager.com/player/api/room/"
+                 "72-poker-at-dv-casino?locale=en")
+          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+          room = json.load(urllib.request.urlopen(req, timeout=20))
+          tables = room.get("tables", [])
+          open_t = [t for t in tables if t.get("status") == "open"]
+          print(json.dumps({
+              "open": len(open_t),
+              "players": sum(t.get("current_players") or 0 for t in open_t),
+              "waiting": sum(t.get("waiting_list_count") or 0 for t in tables),
+              "offers": [[g.get("label", "?"), g.get("color", "#ffffff"),
+                          g.get("open_count", 0)]
+                         for g in room.get("game_offerings", [])
+                         if g.get("open_count")],
+          }))
+          PY
+          cat poker.json
+      - name: publish to the data branch (single rewritten commit)
+        run: |
+          mkdir out && mv poker.json out/ && cd out
+          git init -q -b data
+          git -c user.name=72relay-bot -c user.email=bot@users.noreply.github.com \
+              add poker.json
+          git -c user.name=72relay-bot -c user.email=bot@users.noreply.github.com \
+              commit -q -m "update"
+          git push -q --force \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
