@@ -24,7 +24,10 @@ jobs:
               "players": sum(t.get("current_players") or 0 for t in open_t),
               "waiting": sum(t.get("waiting_list_count") or 0 for t in tables),
               "offers": [[g.get("label", "?"), g.get("color", "#ffffff"),
-                          g.get("open_count", 0)]
+                          g.get("open_count", 0),
+                          sum((t.get("waiting_list_count") or 0) for t in tables
+                              if f"{t.get('game_type')} {t.get('min_blind')}-{t.get('max_blind')}"
+                                 == g.get("label"))]
                          for g in room.get("game_offerings", [])
                          if g.get("open_count")],
           }))
