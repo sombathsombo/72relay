@@ -21,7 +21,7 @@ jobs:
           open_t = [t for t in tables if t.get("status") == "open"]
           print(json.dumps({
               "open": len(open_t),
-              "t": [[t.get("table_id") or 0,
+              "t": [[int("".join(filter(str.isdigit, t.get("name", ""))) or t.get("table_id") or 0),
                      f"{t.get('game_type')} {t.get('min_blind')}-{t.get('max_blind')}",
                      t.get("game_color") or "#ffffff"]
                     for t in open_t],
