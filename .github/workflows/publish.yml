@@ -21,6 +21,11 @@ jobs:
           open_t = [t for t in tables if t.get("status") == "open"]
           print(json.dumps({
               "open": len(open_t),
+              "t": [[t.get("table_id") or 0,
+                     f"{t.get('game_type')} {t.get('min_blind')}-{t.get('max_blind')}",
+                     t.get("game_color") or "#ffffff"]
+                    for t in open_t],
+
               "players": sum(t.get("current_players") or 0 for t in open_t),
               "waiting": sum(t.get("waiting_list_count") or 0 for t in tables),
               "offers": [[g.get("label", "?"), g.get("color", "#ffffff"),
